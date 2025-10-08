@@ -90,13 +90,7 @@ const AdminLogin = ({ onLogin }) => {
               Signing in...
             </div>
           ) : 'Sign in'}
-        </button>
-        
-        <div className="text-center text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-          <p className="font-semibold">Default credentials:</p>
-          <p>Username: <strong>admin</strong></p>
-          <p>Password: <strong>admin123</strong></p>
-        </div>
+        </button>       
       </form>
     </div>
   );
