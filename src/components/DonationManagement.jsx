@@ -15,6 +15,7 @@ const DonationManagement = ({ onUpdate }) => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [ticketPrice, setTicketPrice] = useState(2.0);
   const [autoGenerateTickets, setAutoGenerateTickets] = useState(true);
+  const [selectedScreenshot, setSelectedScreenshot] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -117,7 +118,6 @@ const DonationManagement = ({ onUpdate }) => {
         : "",
     });
     
-    // Set auto-generate based on whether ticket numbers already exist
     setAutoGenerateTickets(!donation.ticketNumbers || donation.ticketNumbers.length === 0);
   };
 
@@ -192,6 +192,42 @@ const DonationManagement = ({ onUpdate }) => {
         ticketNumbers: "",
       });
     }
+  };
+
+  const openScreenshotModal = (screenshotUrl, donation) => {
+    setSelectedScreenshot({
+      url: screenshotUrl,
+      donation: donation
+    });
+  };
+
+  const downloadScreenshot = async () => {
+    if (!selectedScreenshot) return;
+
+    try {
+      const response = await fetch(selectedScreenshot.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      
+      // Extract filename from URL or create one
+      const filename = `screenshot-${selectedScreenshot.donation.fullName}-${selectedScreenshot.donation.id}.${getFileExtension(selectedScreenshot.url)}`;
+      
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading screenshot:", error);
+      alert("Error downloading screenshot");
+    }
+  };
+
+  const getFileExtension = (url) => {
+    const match = url.match(/\.([^.?]+)(?=\?|$)/);
+    return match ? match[1] : 'jpg';
   };
 
   // Filter donations
@@ -392,20 +428,20 @@ const DonationManagement = ({ onUpdate }) => {
                           </svg>
                           Edit
                         </button>
+                        
                         {donation.paymentScreenshot && (
-                          <a
-                            href={donation.paymentScreenshot}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => openScreenshotModal(donation.paymentScreenshot, donation)}
                             className="flex items-center gap-1 text-emerald-600 hover:text-emerald-800 font-semibold text-sm transition-colors duration-200"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            Screenshot
-                          </a>
+                            View Screenshot
+                          </button>
                         )}
+
                         <button
                           onClick={() => handleDeleteDonation(donation.id)}
                           className="flex items-center gap-1 text-rose-600 hover:text-rose-800 font-semibold text-sm transition-colors duration-200"
@@ -632,6 +668,98 @@ const DonationManagement = ({ onUpdate }) => {
                   >
                     Update Status
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Screenshot Modal */}
+      {selectedScreenshot && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-lg flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Payment Screenshot
+                </h3>
+                <p className="text-gray-600 mt-1">
+                  {selectedScreenshot.donation.fullName} - €{selectedScreenshot.donation.amount}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={downloadScreenshot}
+                  className="flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-all duration-200 font-semibold"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download
+                </button>
+                <button
+                  onClick={() => setSelectedScreenshot(null)}
+                  className="text-gray-400 hover:text-gray-600 text-3xl transition-colors duration-200 p-2"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 max-h-[70vh] overflow-auto">
+              <div className="flex justify-center">
+                <img
+                  src={selectedScreenshot.url}
+                  alt="Payment Screenshot"
+                  className="max-w-full h-auto rounded-2xl shadow-lg border border-gray-200"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'text-center py-20 text-gray-500';
+                    errorDiv.innerHTML = `
+                      <div class="text-6xl mb-4">📸</div>
+                      <p class="text-lg font-semibold">Failed to load image</p>
+                      <p class="text-sm mt-2">The screenshot cannot be displayed</p>
+                      <a href="${selectedScreenshot.url}" target="_blank" class="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+                        Open in new tab
+                      </a>
+                    `;
+                    e.target.parentNode.appendChild(errorDiv);
+                  }}
+                />
+              </div>
+              
+              {/* Donation Info Below Image */}
+              <div className="mt-6 bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 mb-4">Donation Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold text-gray-700">Donor Name:</span>
+                    <p className="text-gray-900">{selectedScreenshot.donation.fullName}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Email:</span>
+                    <p className="text-gray-900">{selectedScreenshot.donation.email}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Amount:</span>
+                    <p className="text-gray-900">€{selectedScreenshot.donation.amount}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Tickets Requested:</span>
+                    <p className="text-gray-900">{selectedScreenshot.donation.tickets}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Status:</span>
+                    <p className="text-gray-900">{getStatusBadge(selectedScreenshot.donation.status)}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Date:</span>
+                    <p className="text-gray-900">
+                      {new Date(selectedScreenshot.donation.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
