@@ -240,7 +240,6 @@ const DonationForm = () => {
                   {orgName || 'Quiz Registration'}
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base font-medium mt-1">
-                  Team Registration - 2 Persons per Team
                 </p>
               </div>
             </div>
