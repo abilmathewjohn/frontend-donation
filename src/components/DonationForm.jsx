@@ -154,67 +154,85 @@ const DonationForm = () => {
     };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
-    const totalAmount = calculateTotalAmount();
+  const totalAmount = calculateTotalAmount();
+  
+  const submitData = new FormData();
+  Object.keys(formData).forEach(key => {
+    submitData.append(key, formData[key]);
+  });
+  
+  // Fix: Ensure amount is properly formatted as a number with 2 decimal places
+  const formattedAmount = parseFloat(totalAmount).toFixed(2);
+  submitData.append('amount', formattedAmount);
+  
+  if (screenshot) {
+    submitData.append('screenshot', screenshot);
+  }
+
+  try {
+    console.log('🔄 Submitting registration...');
+    console.log('💰 Amount being sent:', formattedAmount);
     
-    const submitData = new FormData();
-    Object.keys(formData).forEach(key => {
-      submitData.append(key, formData[key]);
+    const response = await axios.post(`${API_URL}/donations`, submitData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000,
     });
-    submitData.append('amount', totalAmount);
-    if (screenshot) {
-      submitData.append('screenshot', screenshot);
-    }
-
-    try {
-      const response = await axios.post(`${API_URL}/donations`, submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 30000,
-      });
-      
-      alert('Team registration submitted successfully! Confirmation will be sent to your email.');
-      
-      setStep(1);
-      setFormData({
-        participantName: '',
-        teammateName: '',
-        address: '',
-        contactNumber1: '',
-        contactNumber2: '',
-        email: '',
-        whatsappNumber: '',
-        zone: '',
-        howKnown: '',
-        otherHowKnown: '',
-        diocese: '',
-        previousParticipation: false,
-        teamRegistration: true,
-        paymentLinkUsed: '',
-      });
-      setScreenshot(null);
-      setScreenshotPreview(null);
-      setErrors({});
-    } catch (error) {
-      console.error('Error submitting registration:', error);
-      let errorMessage = 'Error submitting registration. Please try again.';
-      
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.request) {
-        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+    
+    console.log('✅ Registration successful:', response.data);
+    alert('Team registration submitted successfully! Confirmation will be sent to your email.');
+    
+    // Reset form
+    setStep(1);
+    setFormData({
+      participantName: '',
+      teammateName: '',
+      address: '',
+      contactNumber1: '',
+      contactNumber2: '',
+      email: '',
+      whatsappNumber: '',
+      zone: '',
+      howKnown: '',
+      otherHowKnown: '',
+      diocese: '',
+      previousParticipation: false,
+      teamRegistration: true,
+      paymentLinkUsed: '',
+    });
+    setScreenshot(null);
+    setScreenshotPreview(null);
+    setErrors({});
+  } catch (error) {
+    console.error('❌ Error submitting registration:', error);
+    console.error('❌ Error response:', error.response);
+    
+    let errorMessage = 'Error submitting registration. Please try again.';
+    
+    if (error.response?.data?.error) {
+      errorMessage = `Server Error: ${error.response.data.error}`;
+      if (error.response.data.details) {
+        errorMessage += `\nDetails: ${error.response.data.details}`;
       }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+    } else if (error.response?.data?.missingFields) {
+      errorMessage = `Missing required fields: ${error.response.data.missingFields.join(', ')}`;
+    } else if (error.request) {
+      errorMessage = 'Unable to connect to server. Please check your internet connection.';
+    } else {
+      errorMessage = `Network Error: ${error.message}`;
     }
-  };
+    
+    setError(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const totalAmount = calculateTotalAmount();
   const amountBreakdown = getAmountBreakdown();
