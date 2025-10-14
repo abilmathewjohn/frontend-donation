@@ -12,6 +12,7 @@ const DonationManagement = ({ onUpdate }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedScreenshot, setSelectedScreenshot] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null); // Track which donation is being updated
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -51,17 +52,35 @@ const DonationManagement = ({ onUpdate }) => {
   };
 
   const updateDonationStatus = async (donationId) => {
+    setUpdatingId(donationId); // Set the updating ID
     try {
       const payload = {
         ...statusUpdate,
         actualAmount: parseFloat(statusUpdate.actualAmount) || 0,
       };
 
-      await axios.patch(
+      console.log('🔄 Updating donation status for ID:', donationId);
+      console.log('📦 Payload:', payload);
+
+      const response = await axios.patch(
         `${API_URL}/admin/donations/${donationId}/status`,
         payload
       );
-      await fetchDonations();
+
+      console.log('✅ Update response:', response.data);
+
+      // Immediately update the local state to show the Team ID
+      if (response.data.donation && response.data.donation.teamId) {
+        setDonations(prevDonations => 
+          prevDonations.map(donation => 
+            donation.id === donationId 
+              ? { ...donation, ...response.data.donation }
+              : donation
+          )
+        );
+      }
+
+      await fetchDonations(); // Refresh the list
       onUpdate();
       setSelectedDonation(null);
       setStatusUpdate({
@@ -72,6 +91,8 @@ const DonationManagement = ({ onUpdate }) => {
     } catch (error) {
       console.error("Error updating registration status:", error);
       alert("Error updating registration status: " + (error.response?.data?.error || error.message));
+    } finally {
+      setUpdatingId(null); // Clear updating ID
     }
   };
 
@@ -314,12 +335,19 @@ const DonationManagement = ({ onUpdate }) => {
                       </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
-                      <div className="text-sm font-semibold text-blue-600">
+                      <div className={`text-sm font-semibold ${
+                        donation.teamId ? "text-blue-600" : "text-gray-500"
+                      }`}>
                         {donation.teamId || "Pending"}
                       </div>
                       <div className="text-xs text-gray-500">
                         {donation.teamId ? "Confirmed" : "Not assigned"}
                       </div>
+                      {updatingId === donation.id && (
+                        <div className="text-xs text-amber-600 mt-1">
+                          ⏳ Generating Team ID...
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       <div className="text-sm font-semibold text-gray-900">
@@ -346,12 +374,17 @@ const DonationManagement = ({ onUpdate }) => {
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <button
                           onClick={() => openStatusModal(donation)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs sm:text-sm transition-colors duration-200"
+                          disabled={updatingId === donation.id}
+                          className={`flex items-center gap-1 font-semibold text-xs sm:text-sm transition-colors duration-200 ${
+                            updatingId === donation.id 
+                              ? "text-gray-400 cursor-not-allowed" 
+                              : "text-blue-600 hover:text-blue-800"
+                          }`}
                         >
                           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                          Status
+                          {updatingId === donation.id ? "Updating..." : "Status"}
                         </button>
                         
                         {donation.paymentScreenshot && (
@@ -369,7 +402,12 @@ const DonationManagement = ({ onUpdate }) => {
 
                         <button
                           onClick={() => handleDeleteDonation(donation.id)}
-                          className="flex items-center gap-1 text-rose-600 hover:text-rose-800 font-semibold text-xs sm:text-sm transition-colors duration-200"
+                          disabled={updatingId === donation.id}
+                          className={`flex items-center gap-1 font-semibold text-xs sm:text-sm transition-colors duration-200 ${
+                            updatingId === donation.id 
+                              ? "text-gray-400 cursor-not-allowed" 
+                              : "text-rose-600 hover:text-rose-800"
+                          }`}
                         >
                           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -467,7 +505,7 @@ const DonationManagement = ({ onUpdate }) => {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
                   >
                     <option value="pending">⏳ Pending</option>
-                    <option value="confirmed">✅ Confirm & Send Team ID</option>
+                    <option value="confirmed">✅ Confirm & Generate Team ID</option>
                     <option value="rejected">❌ Rejected</option>
                   </select>
                 </div>
@@ -502,15 +540,24 @@ const DonationManagement = ({ onUpdate }) => {
                 <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setSelectedDonation(null)}
-                    className="px-6 py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-xl font-semibold transition-all duration-200 hover:border-gray-400 text-sm sm:text-base"
+                    disabled={updatingId === selectedDonation.id}
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-xl font-semibold transition-all duration-200 hover:border-gray-400 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => updateDonationStatus(selectedDonation.id)}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                    disabled={updatingId === selectedDonation.id || !statusUpdate.status}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Update Status
+                    {updatingId === selectedDonation.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Status'
+                    )}
                   </button>
                 </div>
               </div>
