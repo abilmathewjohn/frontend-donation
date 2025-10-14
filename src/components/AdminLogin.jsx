@@ -15,11 +15,11 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
 
     // Simple authentication
-    if (credentials.username === 'admin' && credentials.password === 'admin123') {
+    if (credentials.username === 'superadminquiz' && credentials.password === 'Admin@quiz123') {
       localStorage.setItem('adminAuthenticated', 'true');
       onLogin(true);
     } else {
-      setError('Invalid credentials. Use admin / admin123');
+      setError('Invalid credentials. Use superadminquiz / Admin@quiz123');
     }
     setLoading(false);
   };
