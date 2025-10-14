@@ -51,50 +51,83 @@ const DonationManagement = ({ onUpdate }) => {
     }
   };
 
-  const updateDonationStatus = async (donationId) => {
-    setUpdatingId(donationId); // Set the updating ID
-    try {
-      const payload = {
-        ...statusUpdate,
-        actualAmount: parseFloat(statusUpdate.actualAmount) || 0,
-      };
+ const updateDonationStatus = async (donationId) => {
+  setUpdatingId(donationId);
+  
+  try {
+    const payload = {
+      ...statusUpdate,
+      actualAmount: parseFloat(statusUpdate.actualAmount) || 0,
+    };
 
-      console.log('🔄 Updating donation status for ID:', donationId);
-      console.log('📦 Payload:', payload);
+    console.log('⚡ Quick status update started');
 
-      const response = await axios.patch(
-        `${API_URL}/admin/donations/${donationId}/status`,
-        payload
+    // INSTANT Team ID generation on frontend for immediate display
+    if (statusUpdate.status === 'confirmed') {
+      const instantTeamId = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      setDonations(prevDonations => 
+        prevDonations.map(donation => 
+          donation.id === donationId 
+            ? { 
+                ...donation, 
+                status: 'confirmed',
+                teamId: instantTeamId, // Show instantly
+                actualAmount: payload.actualAmount
+              }
+            : donation
+        )
       );
-
-      console.log('✅ Update response:', response.data);
-
-      // Immediately update the local state to show the Team ID
-      if (response.data.donation && response.data.donation.teamId) {
-        setDonations(prevDonations => 
-          prevDonations.map(donation => 
-            donation.id === donationId 
-              ? { ...donation, ...response.data.donation }
-              : donation
-          )
-        );
-      }
-
-      await fetchDonations(); // Refresh the list
-      onUpdate();
-      setSelectedDonation(null);
-      setStatusUpdate({
-        status: "",
-        actualAmount: "",
-      });
-      alert("Registration status updated successfully!");
-    } catch (error) {
-      console.error("Error updating registration status:", error);
-      alert("Error updating registration status: " + (error.response?.data?.error || error.message));
-    } finally {
-      setUpdatingId(null); // Clear updating ID
     }
-  };
+
+    // Quick API call with timeout
+    const response = await axios.patch(
+      `${API_URL}/admin/donations/${donationId}/status`,
+      payload,
+      { timeout: 5000 } // 5 second timeout max
+    );
+
+    console.log('✅ Backend response received');
+
+    // Update with server data (in case Team ID is different)
+    if (response.data.donation) {
+      setDonations(prevDonations => 
+        prevDonations.map(donation => 
+          donation.id === donationId 
+            ? { ...donation, ...response.data.donation }
+            : donation
+        )
+      );
+    }
+
+    setSelectedDonation(null);
+    setStatusUpdate({ status: "", actualAmount: "" });
+    
+    alert(`✅ Status updated! Team ID: ${response.data.donation?.teamId || 'Generated'}`);
+    
+  } catch (error) {
+    console.error("Update error:", error);
+    
+    // Revert on error
+    if (statusUpdate.status === 'confirmed') {
+      setDonations(prevDonations => 
+        prevDonations.map(donation => 
+          donation.id === donationId 
+            ? { 
+                ...donation, 
+                status: selectedDonation?.status || 'pending',
+                teamId: selectedDonation?.teamId || null
+              }
+            : donation
+        )
+      );
+    }
+    
+    alert("Update failed: " + (error.response?.data?.error || error.message));
+  } finally {
+    setUpdatingId(null);
+  }
+};
 
   const openStatusModal = (donation) => {
     const actualAmount = parseFloat(donation.actualAmount || donation.amount) || 0;
