@@ -8,20 +8,15 @@ const DonationManagement = ({ onUpdate }) => {
   const [statusUpdate, setStatusUpdate] = useState({
     status: "",
     actualAmount: "",
-    ticketsToAssign: "",
-    ticketNumbers: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [ticketPrice, setTicketPrice] = useState(2.0);
-  const [autoGenerateTickets, setAutoGenerateTickets] = useState(true);
   const [selectedScreenshot, setSelectedScreenshot] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     fetchDonations();
-    fetchTicketPrice();
   }, []);
 
   const fetchDonations = async () => {
@@ -34,7 +29,7 @@ const DonationManagement = ({ onUpdate }) => {
       if (error.response?.data?.error) {
         alert(`Error: ${error.response.data.error}`);
       } else {
-        alert("Failed to load donations. Please check if the server is running.");
+        alert("Failed to load registrations. Please check if the server is running.");
       }
     } finally {
       setLoading(false);
@@ -42,28 +37,16 @@ const DonationManagement = ({ onUpdate }) => {
   };
 
   const handleDeleteDonation = async (donationId) => {
-    if (window.confirm("Are you sure you want to delete this donation and its screenshot?")) {
+    if (window.confirm("Are you sure you want to delete this registration and its screenshot?")) {
       try {
         await axios.delete(`${API_URL}/admin/donations/${donationId}`);
         await fetchDonations();
         onUpdate();
-        alert("Donation deleted successfully!");
+        alert("Registration deleted successfully!");
       } catch (error) {
-        console.error("Error deleting donation:", error);
-        alert("Error deleting donation");
+        console.error("Error deleting registration:", error);
+        alert("Error deleting registration");
       }
-    }
-  };
-
-  const fetchTicketPrice = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/admin/settings`);
-      if (response.data) {
-        setTicketPrice(parseFloat(response.data.ticketPrice) || 2.00);
-      }
-    } catch (error) {
-      console.error("Error fetching ticket price:", error);
-      setTicketPrice(2.00);
     }
   };
 
@@ -72,8 +55,6 @@ const DonationManagement = ({ onUpdate }) => {
       const payload = {
         ...statusUpdate,
         actualAmount: parseFloat(statusUpdate.actualAmount) || 0,
-        ticketsToAssign: parseInt(statusUpdate.ticketsToAssign) || 0,
-        autoGenerateTickets: autoGenerateTickets && statusUpdate.status === "confirmed"
       };
 
       await axios.patch(
@@ -86,31 +67,22 @@ const DonationManagement = ({ onUpdate }) => {
       setStatusUpdate({
         status: "",
         actualAmount: "",
-        ticketsToAssign: "",
-        ticketNumbers: "",
       });
-      setAutoGenerateTickets(true);
-      alert("Donation status updated successfully!");
+      alert("Registration status updated successfully!");
     } catch (error) {
-      console.error("Error updating donation status:", error);
-      alert("Error updating donation status: " + (error.response?.data?.error || error.message));
+      console.error("Error updating registration status:", error);
+      alert("Error updating registration status: " + (error.response?.data?.error || error.message));
     }
   };
 
-  const openEditModal = (donation) => {
-    // Fix NaN values by ensuring proper parsing
+  const openStatusModal = (donation) => {
     const actualAmount = parseFloat(donation.actualAmount || donation.amount) || 0;
-    const calculatedTickets = Math.floor(actualAmount / ticketPrice) || 0;
 
     setSelectedDonation(donation);
     setStatusUpdate({
       status: donation.status,
       actualAmount: actualAmount.toString(),
-      ticketsToAssign: (donation.ticketsAssigned || calculatedTickets).toString(),
-      ticketNumbers: donation.ticketNumbers ? donation.ticketNumbers.join(", ") : "",
     });
-    
-    setAutoGenerateTickets(!donation.ticketNumbers || donation.ticketNumbers.length === 0);
   };
 
   const exportToExcel = async () => {
@@ -122,13 +94,13 @@ const DonationManagement = ({ onUpdate }) => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `donations-${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute("download", `registrations-${new Date().toISOString().split("T")[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error) {
-      console.error("Error exporting donations:", error);
-      alert("Error exporting donations");
+      console.error("Error exporting registrations:", error);
+      alert("Error exporting registrations");
     }
   };
 
@@ -155,35 +127,6 @@ const DonationManagement = ({ onUpdate }) => {
         {config.label}
       </span>
     );
-  };
-
-  const calculateTicketsFromAmount = (amount) => {
-    const parsedAmount = parseFloat(amount) || 0;
-    return Math.floor(parsedAmount / ticketPrice) || 0;
-  };
-
-  const handleAmountChange = (amount) => {
-    const parsedAmount = parseFloat(amount) || 0;
-    const calculatedTickets = calculateTicketsFromAmount(parsedAmount);
-    
-    setStatusUpdate({
-      ...statusUpdate,
-      actualAmount: amount,
-      ticketsToAssign: autoGenerateTickets ? calculatedTickets.toString() : statusUpdate.ticketsToAssign,
-    });
-  };
-
-  const handleAutoGenerateToggle = (enabled) => {
-    setAutoGenerateTickets(enabled);
-    if (enabled) {
-      const amount = parseFloat(statusUpdate.actualAmount) || 0;
-      const calculatedTickets = calculateTicketsFromAmount(amount);
-      setStatusUpdate({
-        ...statusUpdate,
-        ticketsToAssign: calculatedTickets.toString(),
-        ticketNumbers: "",
-      });
-    }
   };
 
   const openScreenshotModal = (screenshotUrl, donation) => {
@@ -216,12 +159,13 @@ const DonationManagement = ({ onUpdate }) => {
     }
   };
 
-  // Filter donations - FIXED: Use correct field names
+  // Filter registrations
   const filteredDonations = donations.filter((donation) => {
     const matchesSearch =
       donation.participantName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       donation.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      donation.contactNumber1?.includes(searchTerm);
+      donation.contactNumber1?.includes(searchTerm) ||
+      donation.teamId?.includes(searchTerm);
 
     const matchesStatus =
       statusFilter === "all" || donation.status === statusFilter;
@@ -244,10 +188,10 @@ const DonationManagement = ({ onUpdate }) => {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Donation Management
+              Team Registration Management
             </h2>
             <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              Manage and track all registration requests
+              Manage and track all team registration requests
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
@@ -285,7 +229,7 @@ const DonationManagement = ({ onUpdate }) => {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search by name, email, or phone..."
+                  placeholder="Search by name, email, phone, or team ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
@@ -310,7 +254,7 @@ const DonationManagement = ({ onUpdate }) => {
           </div>
         </div>
 
-        {/* Donations Table Card */}
+        {/* Registrations Table Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -320,7 +264,10 @@ const DonationManagement = ({ onUpdate }) => {
                     Team Information
                   </th>
                   <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    Requested
+                    Team ID
+                  </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Amount
                   </th>
                   <th className="px-4 sm:px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
@@ -355,26 +302,34 @@ const DonationManagement = ({ onUpdate }) => {
                             {donation.participantName}
                           </div>
                           <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                            {donation.email}
+                            + {donation.teammateName}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {donation.contactNumber1}
+                            {donation.email}
                           </div>
-                          {donation.address && (
-                            <div className="text-xs text-gray-400 mt-1">
-                              📍 {donation.address}
-                            </div>
-                          )}
+                          <div className="text-xs text-gray-400 mt-1">
+                            📞 {donation.contactNumber1}
+                          </div>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="text-sm font-semibold text-blue-600">
+                        {donation.teamId || "Pending"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {donation.teamId ? "Confirmed" : "Not assigned"}
                       </div>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       <div className="text-sm font-semibold text-gray-900">
                         €{(parseFloat(donation.amount) || 0).toFixed(2)}
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-600">
-                        Team Registration
-                      </div>
+                      {donation.actualAmount && (
+                        <div className="text-xs text-green-600">
+                          Paid: €{(parseFloat(donation.actualAmount) || 0).toFixed(2)}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 sm:px-6 py-4">
                       {getStatusBadge(donation.status)}
@@ -390,13 +345,13 @@ const DonationManagement = ({ onUpdate }) => {
                     <td className="px-4 sm:px-6 py-4">
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <button
-                          onClick={() => openEditModal(donation)}
+                          onClick={() => openStatusModal(donation)}
                           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs sm:text-sm transition-colors duration-200"
                         >
                           <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
-                          Edit
+                          Status
                         </button>
                         
                         {donation.paymentScreenshot && (
@@ -443,7 +398,7 @@ const DonationManagement = ({ onUpdate }) => {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* Status Change Modal */}
       {selectedDonation && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -461,14 +416,18 @@ const DonationManagement = ({ onUpdate }) => {
               </div>
 
               <div className="space-y-6">
-                {/* Donation Details Card */}
+                {/* Registration Details Card */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-2xl border border-blue-100">
-                  <h4 className="font-bold text-gray-800 mb-4 text-lg">Registration Details</h4>
+                  <h4 className="font-bold text-gray-800 mb-4 text-lg">Team Details</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="space-y-2">
                       <div>
-                        <span className="font-semibold text-gray-700">Participant:</span>
+                        <span className="font-semibold text-gray-700">Team Captain:</span>
                         <p className="text-gray-900">{selectedDonation.participantName}</p>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Teammate:</span>
+                        <p className="text-gray-900">{selectedDonation.teammateName}</p>
                       </div>
                       <div>
                         <span className="font-semibold text-gray-700">Requested Amount:</span>
@@ -483,6 +442,10 @@ const DonationManagement = ({ onUpdate }) => {
                       <div>
                         <span className="font-semibold text-gray-700">Phone:</span>
                         <p className="text-gray-900">{selectedDonation.contactNumber1}</p>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">Team ID:</span>
+                        <p className="text-gray-900 font-mono">{selectedDonation.teamId || "Not assigned"}</p>
                       </div>
                     </div>
                   </div>
@@ -504,7 +467,7 @@ const DonationManagement = ({ onUpdate }) => {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
                   >
                     <option value="pending">⏳ Pending</option>
-                    <option value="confirmed">✅ Confirmed</option>
+                    <option value="confirmed">✅ Confirm & Send Team ID</option>
                     <option value="rejected">❌ Rejected</option>
                   </select>
                 </div>
@@ -521,35 +484,35 @@ const DonationManagement = ({ onUpdate }) => {
                         step="0.01"
                         min="0"
                         value={statusUpdate.actualAmount}
-                        onChange={(e) => handleAmountChange(e.target.value)}
+                        onChange={(e) => setStatusUpdate({
+                          ...statusUpdate,
+                          actualAmount: e.target.value
+                        })}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
                         placeholder="Enter actual amount received"
                       />
                       <p className="text-sm text-gray-600 mt-3">
-                        Based on €{ticketPrice} per ticket:{" "}
-                        <span className="font-semibold text-blue-600">
-                          {calculateTicketsFromAmount(parseFloat(statusUpdate.actualAmount) || 0)} tickets
-                        </span>
+                        Team ID will be automatically generated and sent via email
                       </p>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                      <button
-                        onClick={() => setSelectedDonation(null)}
-                        className="px-6 py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-xl font-semibold transition-all duration-200 hover:border-gray-400 text-sm sm:text-base"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => updateDonationStatus(selectedDonation.id)}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
-                      >
-                        Update Status
-                      </button>
                     </div>
                   </>
                 )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={() => setSelectedDonation(null)}
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 border-2 border-gray-300 rounded-xl font-semibold transition-all duration-200 hover:border-gray-400 text-sm sm:text-base"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => updateDonationStatus(selectedDonation.id)}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
+                  >
+                    Update Status
+                  </button>
+                </div>
               </div>
             </div>
           </div>
