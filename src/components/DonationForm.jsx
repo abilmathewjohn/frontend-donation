@@ -134,16 +134,15 @@ const DonationForm = () => {
       reader.readAsDataURL(file);
     }
   };
-
 const calculateTotalAmount = () => {
-  // Only add registration fee if it's greater than 0
+  // Ensure we're working with proper numbers
   const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
   const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
   
   const total = registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
   
-  // Ensure we return a proper number, not a string with formatting
-  return parseFloat(total.toFixed(2));
+  // Return a proper number, not a formatted string
+  return Number(total.toFixed(2));
 };
 
   const getAmountBreakdown = () => {
@@ -157,7 +156,7 @@ const calculateTotalAmount = () => {
     };
   };
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
   setError(null);
@@ -165,21 +164,34 @@ const calculateTotalAmount = () => {
   const totalAmount = calculateTotalAmount();
   
   const submitData = new FormData();
+  
+  // Add all form data
   Object.keys(formData).forEach(key => {
-    submitData.append(key, formData[key]);
+    if (key === 'previousParticipation') {
+      // Convert boolean to string for FormData
+      submitData.append(key, formData[key].toString());
+    } else {
+      submitData.append(key, formData[key]);
+    }
   });
   
-  // Fix: Ensure amount is properly formatted as a number with 2 decimal places
+  // CRITICAL FIX: Ensure amount is properly formatted as a simple number string
   const formattedAmount = parseFloat(totalAmount).toFixed(2);
+  console.log('💰 Amount being sent:', formattedAmount, 'Type:', typeof formattedAmount);
   submitData.append('amount', formattedAmount);
   
   if (screenshot) {
     submitData.append('screenshot', screenshot);
   }
 
+  // Debug: Log what we're sending
+  console.log('📦 FormData contents:');
+  for (let [key, value] of submitData.entries()) {
+    console.log(`  ${key}:`, value, `(type: ${typeof value})`);
+  }
+
   try {
     console.log('🔄 Submitting registration...');
-    console.log('💰 Amount being sent:', formattedAmount);
     
     const response = await axios.post(`${API_URL}/donations`, submitData, {
       headers: {
