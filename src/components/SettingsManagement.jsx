@@ -4,16 +4,14 @@ import axios from "axios";
 const SettingsManagement = () => {
   const [settings, setSettings] = useState({
     contactPhone: "+3XXXXXXXXX",
-    ticketPrice: 2.0,
     adminEmail: "admin@example.com",
     orgName: "Your Organization",
-    // New pricing fields
+    // Team pricing fields
     pricingMode: "per_team",
     pricePerPerson: 10.0,
     pricePerTeam: 20.0,
     registrationFee: 20.0,
-    pricingDescription:
-      "1 team = €20.00 (€10 per person), Registration fee: €20.00",
+    pricingDescription: "1 team = 2 persons = €20.00 (€10 per person)",
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -189,101 +187,51 @@ const SettingsManagement = () => {
                 </p>
               </div>
 
-              {/* Pricing Settings Section */}
+              {/* Team Pricing Settings Section */}
               <div className="border-t pt-8">
                 <h3 className="text-lg font-bold text-gray-800 mb-6">
-                  Pricing Settings
+                  Team Registration Pricing
                 </h3>
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Pricing Mode
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => handlePricingModeChange("per_ticket")}
-                        className={`p-4 border-2 rounded-xl text-center transition duration-200 ${
-                          settings.pricingMode === "per_ticket"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        <div className="font-semibold">Per Ticket</div>
-                        <div className="text-sm mt-1">Individual tickets</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handlePricingModeChange("per_person")}
-                        className={`p-4 border-2 rounded-xl text-center transition duration-200 ${
-                          settings.pricingMode === "per_person"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        <div className="font-semibold">Per Person</div>
-                        <div className="text-sm mt-1">
-                          Individual registration
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handlePricingModeChange("per_team")}
-                        className={`p-4 border-2 rounded-xl text-center transition duration-200 ${
-                          settings.pricingMode === "per_team"
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                        }`}
-                      >
-                        <div className="font-semibold">Per Team</div>
-                        <div className="text-sm mt-1">Team registration</div>
-                      </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Price Per Person (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={settings.pricePerPerson}
+                        onChange={(e) =>
+                          handleChange(
+                            "pricePerPerson",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Price Per Team (€)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={settings.pricePerTeam}
+                        onChange={(e) =>
+                          handleChange(
+                            "pricePerTeam",
+                            parseFloat(e.target.value)
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      />
                     </div>
                   </div>
-
-                  {settings.pricingMode === "per_team" && (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Price Per Person (€)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            value={settings.pricePerPerson}
-                            onChange={(e) =>
-                              handleChange(
-                                "pricePerPerson",
-                                parseFloat(e.target.value)
-                              )
-                            }
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Price Per Team (€)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            value={settings.pricePerTeam}
-                            onChange={(e) =>
-                              handleChange(
-                                "pricePerTeam",
-                                parseFloat(e.target.value)
-                              )
-                            }
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -292,7 +240,7 @@ const SettingsManagement = () => {
                     <input
                       type="number"
                       step="0.01"
-                      min="0.01"
+                      min="0"
                       value={settings.registrationFee}
                       onChange={(e) =>
                         handleChange(
@@ -302,6 +250,9 @@ const SettingsManagement = () => {
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Set to 0 for no registration fee
+                    </p>
                   </div>
 
                   <div>
@@ -318,8 +269,7 @@ const SettingsManagement = () => {
                       placeholder="Describe your pricing structure..."
                     />
                     <p className="text-sm text-gray-500 mt-2">
-                      This description will be shown to users on the
-                      registration form
+                      This description will be shown to users on the registration form
                     </p>
                   </div>
                 </div>
@@ -337,8 +287,7 @@ const SettingsManagement = () => {
                   placeholder="admin@example.com"
                 />
                 <p className="text-sm text-gray-500 mt-2">
-                  Email address for system notifications and admin
-                  communications
+                  Email address for system notifications and admin communications
                 </p>
               </div>
 
@@ -464,21 +413,21 @@ const SettingsManagement = () => {
                 <span className="text-yellow-600 text-lg">💡</span>
               </div>
               <h3 className="text-lg font-semibold text-yellow-800">
-                Pricing Modes
+                Team Registration
               </h3>
             </div>
             <ul className="text-sm text-yellow-700 space-y-3">
               <li className="flex items-start">
                 <span className="text-yellow-500 mr-2">•</span>
-                <strong>Per Ticket:</strong> Individual ticket sales
+                <strong>1 Team = 2 Persons</strong>
               </li>
               <li className="flex items-start">
                 <span className="text-yellow-500 mr-2">•</span>
-                <strong>Per Person:</strong> Individual registration
+                Each team gets a unique Team ID
               </li>
               <li className="flex items-start">
                 <span className="text-yellow-500 mr-2">•</span>
-                <strong>Per Team:</strong> Team-based registration (2 people)
+                Registration fee can be set to 0
               </li>
             </ul>
           </div>
@@ -508,27 +457,17 @@ const SettingsManagement = () => {
             </h3>
             <div className="space-y-2 text-sm text-green-700">
               <div className="flex justify-between">
-                <span>Mode:</span>
-                <span className="font-semibold capitalize">
-                  {settings.pricingMode?.replace("_", " ")}
+                <span>Per Person:</span>
+                <span className="font-semibold">
+                  €{settings.pricePerPerson}
                 </span>
               </div>
-              {settings.pricingMode === "per_team" && (
-                <>
-                  <div className="flex justify-between">
-                    <span>Per Person:</span>
-                    <span className="font-semibold">
-                      €{settings.pricePerPerson}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Per Team:</span>
-                    <span className="font-semibold">
-                      €{settings.pricePerTeam}
-                    </span>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between">
+                <span>Per Team:</span>
+                <span className="font-semibold">
+                  €{settings.pricePerTeam}
+                </span>
+              </div>
               <div className="flex justify-between">
                 <span>Registration Fee:</span>
                 <span className="font-semibold">
