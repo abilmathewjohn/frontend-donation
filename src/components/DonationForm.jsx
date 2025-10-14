@@ -135,13 +135,16 @@ const DonationForm = () => {
     }
   };
 
-  const calculateTotalAmount = () => {
-    // Only add registration fee if it's greater than 0
-    const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
-    const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
-    
-    return registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
-  };
+const calculateTotalAmount = () => {
+  // Only add registration fee if it's greater than 0
+  const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
+  const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
+  
+  const total = registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
+  
+  // Ensure we return a proper number, not a string with formatting
+  return parseFloat(total.toFixed(2));
+};
 
   const getAmountBreakdown = () => {
     const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
