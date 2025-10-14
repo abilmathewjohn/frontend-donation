@@ -5,11 +5,10 @@ import { Check, Upload, ArrowRight, ArrowLeft } from 'lucide-react';
 const DonationForm = () => {
   const [step, setStep] = useState(1);
   const [pricingSettings, setPricingSettings] = useState({
-    pricingMode: 'per_team',
     pricePerPerson: 10.00,
     pricePerTeam: 20.00,
-    registrationFee: 20.00,
-    pricingDescription: '1 team = €20.00 (€10 per person), Registration fee: €20.00'
+    registrationFee: 0.00,
+    pricingDescription: '1 team = 2 persons = €20.00 (€10 per person)'
   });
   const [paymentLinks, setPaymentLinks] = useState([]);
   const [contactPhone, setContactPhone] = useState('+3XXXXXXXXX');
@@ -58,11 +57,10 @@ const DonationForm = () => {
         setBanners(response.data.banners || []);
         
         setPricingSettings({
-          pricingMode: response.data.pricingMode || 'per_team',
           pricePerPerson: parseFloat(response.data.pricePerPerson) || 10.00,
           pricePerTeam: parseFloat(response.data.pricePerTeam) || 20.00,
-          registrationFee: parseFloat(response.data.registrationFee) || 20.00,
-          pricingDescription: response.data.pricingDescription || '1 team = €20.00 (€10 per person), Registration fee: €20.00'
+          registrationFee: parseFloat(response.data.registrationFee) || 0.00,
+          pricingDescription: response.data.pricingDescription || '1 team = 2 persons = €20.00 (€10 per person)'
         });
         
         setError(null);
@@ -138,10 +136,22 @@ const DonationForm = () => {
   };
 
   const calculateTotalAmount = () => {
-    if (formData.teamRegistration) {
-      return pricingSettings.pricePerTeam + pricingSettings.registrationFee;
-    }
-    return pricingSettings.registrationFee;
+    // Only add registration fee if it's greater than 0
+    const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
+    const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
+    
+    return registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
+  };
+
+  const getAmountBreakdown = () => {
+    const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
+    const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
+    
+    return {
+      pricePerTeam,
+      registrationFee,
+      total: registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam
+    };
   };
 
   const handleSubmit = async (e) => {
@@ -168,7 +178,7 @@ const DonationForm = () => {
         timeout: 30000,
       });
       
-      alert('Registration submitted successfully! Confirmation will be sent to your email.');
+      alert('Team registration submitted successfully! Confirmation will be sent to your email.');
       
       setStep(1);
       setFormData({
@@ -191,7 +201,7 @@ const DonationForm = () => {
       setScreenshotPreview(null);
       setErrors({});
     } catch (error) {
-      console.error('Error submitting donation:', error);
+      console.error('Error submitting registration:', error);
       let errorMessage = 'Error submitting registration. Please try again.';
       
       if (error.response?.data?.error) {
@@ -207,6 +217,7 @@ const DonationForm = () => {
   };
 
   const totalAmount = calculateTotalAmount();
+  const amountBreakdown = getAmountBreakdown();
 
   const isStep1Complete = formData.participantName && formData.teammateName && formData.address && formData.contactNumber1 && formData.email && formData.whatsappNumber && formData.zone && formData.howKnown && formData.diocese && (formData.previousParticipation !== null) && formData.paymentLinkUsed && screenshot && Object.keys(errors).length === 0;
 
@@ -229,7 +240,7 @@ const DonationForm = () => {
                   {orgName || 'Quiz Registration'}
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base font-medium mt-1">
-                  Join our exciting quiz program!
+                  Team Registration - 2 Persons per Team
                 </p>
               </div>
             </div>
@@ -300,7 +311,7 @@ const DonationForm = () => {
                       Team Registration
                     </h2>
                     <p className="text-gray-600">
-                      Complete your team details to participate
+                      Complete your team details (2 persons per team)
                     </p>
                   </div>
                   
@@ -308,13 +319,13 @@ const DonationForm = () => {
                   <div className="bg-orange-50 p-6 rounded-xl border border-orange-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="text-xl">👥</span>
-                      Team Information
+                      Team Information (2 Persons)
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Participant Name <span className="text-red-500">*</span>
+                          Team Captain Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -326,7 +337,7 @@ const DonationForm = () => {
                           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
                             errors.participantName ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
-                          placeholder="Enter name"
+                          placeholder="Team captain name"
                         />
                         {errors.participantName && (
                           <p className="text-red-500 text-xs mt-1">{errors.participantName}</p>
@@ -347,7 +358,7 @@ const DonationForm = () => {
                           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
                             errors.teammateName ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
-                          placeholder="Enter name"
+                          placeholder="Teammate name"
                         />
                         {errors.teammateName && (
                           <p className="text-red-500 text-xs mt-1">{errors.teammateName}</p>
@@ -544,17 +555,31 @@ const DonationForm = () => {
                       
                       <div className="bg-white rounded-lg p-4 mb-4">
                         <p className="text-sm text-gray-600 mb-2">{pricingSettings.pricingDescription}</p>
-                        <div className="text-center">
-                          <p className="text-3xl font-bold text-green-600">
-                            €{totalAmount.toFixed(2)}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">Total Amount</p>
+                        
+                        {/* Amount Breakdown */}
+                        <div className="space-y-2 text-sm mb-4">
+                          <div className="flex justify-between">
+                            <span>Team Registration (2 persons):</span>
+                            <span className="font-semibold">€{amountBreakdown.pricePerTeam.toFixed(2)}</span>
+                          </div>
+                          {amountBreakdown.registrationFee > 0 && (
+                            <div className="flex justify-between">
+                              <span>Registration Fee:</span>
+                              <span className="font-semibold">€{amountBreakdown.registrationFee.toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="border-t border-gray-200 pt-2 mt-2">
+                            <div className="flex justify-between font-bold text-lg">
+                              <span>Total Amount:</span>
+                              <span className="text-green-600">€{amountBreakdown.total.toFixed(2)}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                         <p className="text-sm text-amber-800 text-center">
-                          <strong>Note:</strong> Registration for 2 people
+                          <strong>Note:</strong> Registration for 2 people (1 team)
                         </p>
                       </div>
                     </div>
@@ -591,7 +616,7 @@ const DonationForm = () => {
                           <div className="text-center bg-white p-4 rounded-lg mt-4">
                             <div className="mb-3">
                               <p className="text-sm text-gray-600">Amount to Pay</p>
-                              <p className="text-2xl font-bold text-gray-800">€{totalAmount.toFixed(2)}</p>
+                              <p className="text-2xl font-bold text-gray-800">€{amountBreakdown.total.toFixed(2)}</p>
                             </div>
                             <a
                               href={formData.paymentLinkUsed}
@@ -599,7 +624,7 @@ const DonationForm = () => {
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-6 rounded-lg hover:shadow-lg transition-all font-semibold"
                             >
-                              Pay Now - €{totalAmount.toFixed(2)}
+                              Pay Now - €{amountBreakdown.total.toFixed(2)}
                               <ArrowRight className="w-4 h-4" />
                             </a>
                             <p className="text-xs text-gray-600 mt-2">
@@ -682,7 +707,7 @@ const DonationForm = () => {
                 <div className="space-y-6">
                   <div className="text-center">
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-                      Review Your Registration
+                      Review Your Team Registration
                     </h2>
                     <p className="text-gray-600">
                       Please verify all information before submitting
@@ -699,7 +724,7 @@ const DonationForm = () => {
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <span className="text-xs font-semibold text-gray-500 uppercase">Participant</span>
+                            <span className="text-xs font-semibold text-gray-500 uppercase">Team Captain</span>
                             <p className="text-gray-900 font-semibold">{formData.participantName}</p>
                           </div>
                           <div>
@@ -764,12 +789,29 @@ const DonationForm = () => {
                           <span className="text-xs font-semibold text-gray-500 uppercase">Registration Type</span>
                           <p className="text-gray-900 font-semibold">Team (2 people)</p>
                         </div>
+                        
+                        {/* Amount Breakdown in Review */}
                         <div className="pt-3 border-t border-purple-200">
-                          <span className="text-xs font-semibold text-gray-500 uppercase">Total Amount</span>
-                          <p className="text-3xl font-bold text-green-600">
-                            €{totalAmount.toFixed(2)}
-                          </p>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span>Team Registration:</span>
+                              <span className="font-semibold">€{amountBreakdown.pricePerTeam.toFixed(2)}</span>
+                            </div>
+                            {amountBreakdown.registrationFee > 0 && (
+                              <div className="flex justify-between">
+                                <span>Registration Fee:</span>
+                                <span className="font-semibold">€{amountBreakdown.registrationFee.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="border-t border-gray-200 pt-1 mt-1">
+                              <div className="flex justify-between font-bold text-lg">
+                                <span>Total Amount:</span>
+                                <span className="text-green-600">€{amountBreakdown.total.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
+                        
                         <div>
                           <span className="text-xs font-semibold text-gray-500 uppercase">Payment Method</span>
                           <p className="text-gray-900 font-semibold text-sm break-all">{formData.paymentLinkUsed}</p>
@@ -835,7 +877,7 @@ const DonationForm = () => {
                       Registration Confirmation
                     </p>
                     <p className="text-amber-800 text-sm">
-                      Your registration will be confirmed after verification. Tickets will be sent to your email.
+                      Your team registration will be confirmed after verification. Team ID will be sent to your email.
                       <br />
                       Questions? Contact: <span className="font-bold">{contactPhone}</span>
                     </p>
@@ -843,6 +885,16 @@ const DonationForm = () => {
                 </div>
               )}
             </form>
+          </div>
+
+          {/* Copyright Footer */}
+          <div className="bg-gray-100 border-t border-gray-200 py-6 px-8 text-center">
+            <div className="text-gray-600 text-sm">
+              <p>&copy; {new Date().getFullYear()} {orgName || 'Your Organization'}. All rights reserved.</p>
+              <p className="mt-1 text-gray-500 text-xs">
+                Team Registration System | Designed for seamless event management
+              </p>
+            </div>
           </div>
         </div>
       </div>
