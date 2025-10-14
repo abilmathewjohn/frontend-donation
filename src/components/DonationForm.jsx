@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Check, Upload, ArrowRight, ArrowLeft } from 'lucide-react';
+import ToastContainer from './ToastContainer';
+
+// Toast hook for managing toasts
+const useToast = () => {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'success', duration = 5000) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
+  return { toasts, addToast, removeToast };
+};
 
 const DonationForm = () => {
   const [step, setStep] = useState(1);
@@ -36,6 +53,9 @@ const DonationForm = () => {
   const [screenshotPreview, setScreenshotPreview] = useState(null);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
+  
+  // Toast management
+  const { toasts, addToast, removeToast } = useToast();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -67,7 +87,7 @@ const DonationForm = () => {
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
-      setError('Failed to fetch settings. Using default values.');
+      addToast('Failed to fetch settings. Using default values.', 'warning', 4000);
     }
   };
 
@@ -75,11 +95,9 @@ const DonationForm = () => {
     try {
       const response = await axios.get(`${API_URL}/payment-links/active`, { timeout: 5000 });
       setPaymentLinks(response.data || []);
-      setError(null);
     } catch (error) {
       console.error('Error fetching payment links:', error);
-      setPaymentLinks([]);
-      setError('Failed to fetch payment options. Please try again later.');
+      addToast('Failed to fetch payment options. Please try again later.', 'warning', 4000);
     }
   };
 
@@ -134,21 +152,17 @@ const DonationForm = () => {
       reader.readAsDataURL(file);
     }
   };
-const calculateTotalAmount = () => {
-  // Ensure we're working with proper numbers
-  const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
-  const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
-  
-  const total = registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
-  
-  // Return a proper number, not a formatted string
-  return Number(total.toFixed(2));
-};
+
+  const calculateTotalAmount = () => {
+    const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
+    const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
+    const total = registrationFee > 0 ? pricePerTeam + registrationFee : pricePerTeam;
+    return Number(total.toFixed(2));
+  };
 
   const getAmountBreakdown = () => {
     const registrationFee = parseFloat(pricingSettings.registrationFee) || 0;
     const pricePerTeam = parseFloat(pricingSettings.pricePerTeam) || 0;
-    
     return {
       pricePerTeam,
       registrationFee,
@@ -156,98 +170,92 @@ const calculateTotalAmount = () => {
     };
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError(null);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-  const totalAmount = calculateTotalAmount();
-  
-  const submitData = new FormData();
-  
-  // Add all form data
-  Object.keys(formData).forEach(key => {
-    if (key === 'previousParticipation') {
-      // Convert boolean to string for FormData
-      submitData.append(key, formData[key].toString());
-    } else {
-      submitData.append(key, formData[key]);
-    }
-  });
-  
-  // CRITICAL FIX: Ensure amount is properly formatted as a simple number string
-  const formattedAmount = parseFloat(totalAmount).toFixed(2);
-  console.log('💰 Amount being sent:', formattedAmount, 'Type:', typeof formattedAmount);
-  submitData.append('amount', formattedAmount);
-  
-  if (screenshot) {
-    submitData.append('screenshot', screenshot);
-  }
-
-  // Debug: Log what we're sending
-  console.log('📦 FormData contents:');
-  for (let [key, value] of submitData.entries()) {
-    console.log(`  ${key}:`, value, `(type: ${typeof value})`);
-  }
-
-  try {
-    console.log('🔄 Submitting registration...');
+    const totalAmount = calculateTotalAmount();
     
-    const response = await axios.post(`${API_URL}/donations`, submitData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 30000,
-    });
+    const submitData = new FormData();
     
-    console.log('✅ Registration successful:', response.data);
-    alert('Team registration submitted successfully! Confirmation will be sent to your email.');
-    
-    // Reset form
-    setStep(1);
-    setFormData({
-      participantName: '',
-      teammateName: '',
-      address: '',
-      contactNumber1: '',
-      contactNumber2: '',
-      email: '',
-      whatsappNumber: '',
-      zone: '',
-      howKnown: '',
-      otherHowKnown: '',
-      diocese: '',
-      previousParticipation: false,
-      teamRegistration: true,
-      paymentLinkUsed: '',
-    });
-    setScreenshot(null);
-    setScreenshotPreview(null);
-    setErrors({});
-  } catch (error) {
-    console.error('❌ Error submitting registration:', error);
-    console.error('❌ Error response:', error.response);
-    
-    let errorMessage = 'Error submitting registration. Please try again.';
-    
-    if (error.response?.data?.error) {
-      errorMessage = `Server Error: ${error.response.data.error}`;
-      if (error.response.data.details) {
-        errorMessage += `\nDetails: ${error.response.data.details}`;
+    Object.keys(formData).forEach(key => {
+      if (key === 'previousParticipation') {
+        submitData.append(key, formData[key].toString());
+      } else {
+        submitData.append(key, formData[key]);
       }
-    } else if (error.response?.data?.missingFields) {
-      errorMessage = `Missing required fields: ${error.response.data.missingFields.join(', ')}`;
-    } else if (error.request) {
-      errorMessage = 'Unable to connect to server. Please check your internet connection.';
-    } else {
-      errorMessage = `Network Error: ${error.message}`;
-    }
+    });
     
-    setError(errorMessage);
-  } finally {
-    setLoading(false);
-  }
-};
+    const formattedAmount = parseFloat(totalAmount).toFixed(2);
+    submitData.append('amount', formattedAmount);
+    
+    if (screenshot) {
+      submitData.append('screenshot', screenshot);
+    }
+
+    try {
+      console.log('🔄 Submitting registration...');
+      
+      const response = await axios.post(`${API_URL}/donations`, submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000,
+      });
+      
+      // Success toast with beautiful animation
+      addToast(
+        '🎉 Team registration submitted successfully! Confirmation will be sent to your email.',
+        'success',
+        6000
+      );
+      
+      // Reset form
+      setStep(1);
+      setFormData({
+        participantName: '',
+        teammateName: '',
+        address: '',
+        contactNumber1: '',
+        contactNumber2: '',
+        email: '',
+        whatsappNumber: '',
+        zone: '',
+        howKnown: '',
+        otherHowKnown: '',
+        diocese: '',
+        previousParticipation: false,
+        teamRegistration: true,
+        paymentLinkUsed: '',
+      });
+      setScreenshot(null);
+      setScreenshotPreview(null);
+      setErrors({});
+      
+    } catch (error) {
+      console.error('❌ Error submitting registration:', error);
+      
+      let errorMessage = 'Error submitting registration. Please try again.';
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+        if (error.response.data.details) {
+          errorMessage += ` - ${error.response.data.details}`;
+        }
+      } else if (error.response?.data?.missingFields) {
+        errorMessage = `Missing required fields: ${error.response.data.missingFields.join(', ')}`;
+      } else if (error.request) {
+        errorMessage = 'Unable to connect to server. Please check your internet connection.';
+      }
+      
+      // Error toast
+      addToast(`❌ ${errorMessage}`, 'error', 8000);
+      
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalAmount = calculateTotalAmount();
   const amountBreakdown = getAmountBreakdown();
@@ -256,6 +264,9 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-rose-50 py-6 px-4 sm:px-6 lg:px-8">
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
@@ -295,9 +306,13 @@ const handleSubmit = async (e) => {
           )}
 
           <div className="p-6 sm:p-8">
+            {/* Error Display */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                {error}
+              <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center space-x-3 animate-pulse">
+                <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">{error}</p>
+                </div>
               </div>
             )}
 
@@ -319,9 +334,9 @@ const handleSubmit = async (e) => {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
                         step > stepInfo.num
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-green-500 text-white shadow-lg'
                           : step === stepInfo.num
-                          ? 'bg-orange-400 text-white shadow-lg'
+                          ? 'bg-orange-400 text-white shadow-lg ring-4 ring-orange-100'
                           : 'bg-white border-2 border-gray-300 text-gray-400'
                       }`}
                     >
@@ -335,7 +350,7 @@ const handleSubmit = async (e) => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit}>
+<form onSubmit={handleSubmit}>
               {/* Step 1 */}
               {step === 1 && (
                 <div className="space-y-8">
