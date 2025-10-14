@@ -890,7 +890,7 @@ const DonationForm = () => {
           {/* Copyright Footer */}
           <div className="bg-gray-100 border-t border-gray-200 py-6 px-8 text-center">
             <div className="text-gray-600 text-sm">
-              <p>&copy; {new Date().getFullYear()} {orgName || 'Your Organization'}. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} {orgName || 'Fedus'}. All rights reserved.</p>
               <p className="mt-1 text-gray-500 text-xs">
                 Team Registration System | Designed for seamless event management
               </p>
