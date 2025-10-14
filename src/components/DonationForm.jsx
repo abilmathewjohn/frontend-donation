@@ -240,6 +240,7 @@ const DonationForm = () => {
                   {orgName || 'Quiz Registration'}
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base font-medium mt-1">
+                  Team Registration - 2 Persons per Team
                 </p>
               </div>
             </div>
@@ -875,11 +876,35 @@ const DonationForm = () => {
                       <span className="text-xl">🎫</span>
                       Registration Confirmation
                     </p>
-                    <p className="text-amber-800 text-sm">
-                      Your team registration will be confirmed after verification. Team ID will be sent to your email.
-                      <br />
-                      Questions? Contact: <span className="font-bold">{contactPhone}</span>
+                    <p className="text-amber-800 text-sm mb-2">
+                      Your team registration will be confirmed after verification. Team ID will be sent to your email.<br />
+                      <span className="block mt-2">
+                        <strong>Questions? Contact:</strong> <span className="font-bold">{contactPhone}</span>
+                      </span>
+                      <span className="block mt-1">
+                        <strong>Contact Numbers:</strong> Baiju - 99504272, Dominic - 99251343, Joe - 77073543, Divya - 99339600
+                      </span>
                     </p>
+                    <div className="flex items-center justify-center gap-2 mt-2">
+                      <span className="text-amber-900 font-semibold">More Information:</span>
+                      <a
+                        href="https://www.facebook.com/profile.php?id=100064492097924"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-700 hover:underline font-semibold"
+                        title="Facebook St. Alphonsa Unit, Malta"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          className="w-5 h-5"
+                        >
+                          <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.326 24h11.495v-9.294H9.691v-3.622h3.13V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.405 24 24 23.408 24 22.674V1.326C24 .592 23.405 0 22.675 0"/>
+                        </svg>
+                        Facebook St. Alphonsa Unit, Malta
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
