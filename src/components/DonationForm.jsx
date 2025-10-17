@@ -137,6 +137,10 @@ const DonationForm = () => {
     setErrors(newErrors);
   };
 
+  const handlePaymentMethodSelect = (paymentUrl) => {
+    setFormData({ ...formData, paymentLinkUsed: paymentUrl });
+  };
+
   const handleCheckboxChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -204,11 +208,11 @@ const DonationForm = () => {
         timeout: 30000,
       });
       
-      // Success toast with beautiful animation
+      // Success toast with spam folder warning
       addToast(
-        '🎉 Team registration submitted successfully! Confirmation will be sent to your email.',
+        '🎉 Team registration submitted successfully! Confirmation will be sent to your email. Please check your spam folder if you don\'t see it.',
         'success',
-        6000
+        8000
       );
       
       // Reset form
@@ -263,14 +267,14 @@ const DonationForm = () => {
   const isStep1Complete = formData.participantName && formData.teammateName && formData.address && formData.contactNumber1 && formData.email && formData.whatsappNumber && formData.zone && formData.howKnown && formData.diocese && (formData.previousParticipation !== null) && formData.paymentLinkUsed && screenshot && Object.keys(errors).length === 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-rose-50 py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50 py-6 px-4 sm:px-6 lg:px-8">
       {/* Toast Container */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400 px-6 py-6">
+          <div className="bg-gradient-to-r from-pink-400 via-rose-400 to-orange-400 px-6 py-6">
             <div className="flex items-center justify-center gap-4">
               {logoUrl && (
                 <img 
@@ -309,7 +313,7 @@ const DonationForm = () => {
             {/* Error Display */}
             {error && (
               <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center space-x-3 animate-pulse">
-                <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <div className="w-5 h-5 text-red-500 flex-shrink-0">❌</div>
                 <div>
                   <p className="font-medium">{error}</p>
                 </div>
@@ -321,7 +325,7 @@ const DonationForm = () => {
               <div className="flex justify-between items-center relative max-w-md mx-auto">
                 <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-10">
                   <div 
-                    className="h-1 bg-gradient-to-r from-orange-400 to-amber-400 transition-all duration-500"
+                    className="h-1 bg-gradient-to-r from-pink-400 to-orange-400 transition-all duration-500"
                     style={{ width: step === 1 ? '50%' : '100%' }}
                   ></div>
                 </div>
@@ -336,7 +340,7 @@ const DonationForm = () => {
                         step > stepInfo.num
                           ? 'bg-green-500 text-white shadow-lg'
                           : step === stepInfo.num
-                          ? 'bg-orange-400 text-white shadow-lg ring-4 ring-orange-100'
+                          ? 'bg-pink-400 text-white shadow-lg ring-4 ring-pink-100'
                           : 'bg-white border-2 border-gray-300 text-gray-400'
                       }`}
                     >
@@ -350,7 +354,7 @@ const DonationForm = () => {
               </div>
             </div>
 
-<form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
               {/* Step 1 */}
               {step === 1 && (
                 <div className="space-y-8">
@@ -364,7 +368,7 @@ const DonationForm = () => {
                   </div>
                   
                   {/* Team Information */}
-                  <div className="bg-orange-50 p-6 rounded-xl border border-orange-200">
+                  <div className="bg-pink-50 p-6 rounded-xl border border-pink-200">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="text-xl">👥</span>
                       Team Information (2 Persons)
@@ -382,7 +386,7 @@ const DonationForm = () => {
                           onChange={handleInputChange}
                           required
                           maxLength={25}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.participantName ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="Team captain name"
@@ -403,7 +407,7 @@ const DonationForm = () => {
                           onChange={handleInputChange}
                           required
                           maxLength={25}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.teammateName ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="Teammate name"
@@ -423,7 +427,7 @@ const DonationForm = () => {
                           value={formData.address}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none"
                           placeholder="Your address"
                         />
                       </div>
@@ -439,7 +443,7 @@ const DonationForm = () => {
                           onChange={handleInputChange}
                           required
                           maxLength={11}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.contactNumber1 ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="Phone number"
@@ -456,7 +460,7 @@ const DonationForm = () => {
                           value={formData.contactNumber2}
                           onChange={handleInputChange}
                           maxLength={11}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.contactNumber2 ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="Optional"
@@ -473,7 +477,7 @@ const DonationForm = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           required
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="email@example.com"
@@ -494,7 +498,7 @@ const DonationForm = () => {
                           onChange={handleInputChange}
                           required
                           maxLength={11}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.whatsappNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="WhatsApp number"
@@ -512,7 +516,7 @@ const DonationForm = () => {
                           onChange={handleInputChange}
                           required
                           maxLength={15}
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none ${
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none ${
                             errors.zone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                           }`}
                           placeholder="Zone"
@@ -529,7 +533,7 @@ const DonationForm = () => {
                           value={formData.diocese}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none"
                           placeholder="Diocese"
                         />
                       </div>
@@ -543,7 +547,7 @@ const DonationForm = () => {
                           value={formData.howKnown}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none bg-white"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none bg-white"
                         >
                           <option value="">Select an option</option>
                           <option value="Social Media">Social Media</option>
@@ -558,7 +562,7 @@ const DonationForm = () => {
                             value={formData.otherHowKnown}
                             onChange={handleInputChange}
                             required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none mt-2"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none mt-2"
                             placeholder="Please specify"
                           />
                         )}
@@ -574,7 +578,7 @@ const DonationForm = () => {
                               type="radio"
                               checked={formData.previousParticipation}
                               onChange={() => handleCheckboxChange('previousParticipation', true)}
-                              className="w-4 h-4 text-orange-400"
+                              className="w-4 h-4 text-pink-400"
                             />
                             <span>Yes</span>
                           </label>
@@ -583,7 +587,7 @@ const DonationForm = () => {
                               type="radio"
                               checked={!formData.previousParticipation}
                               onChange={() => handleCheckboxChange('previousParticipation', false)}
-                              className="w-4 h-4 text-orange-400"
+                              className="w-4 h-4 text-pink-400"
                             />
                             <span>No</span>
                           </label>
@@ -641,27 +645,53 @@ const DonationForm = () => {
                         </h3>
                         
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
                             Select Payment Method <span className="text-red-500">*</span>
                           </label>
-                          <select
-                            name="paymentLinkUsed"
-                            value={formData.paymentLinkUsed}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none bg-white"
-                          >
-                            <option value="">Choose a payment method</option>
-                            {paymentLinks.map((link) => (
-                              <option key={link.id} value={link.url}>
-                                {link.name}
-                              </option>
-                            ))}
-                          </select>
+                          
+                          {/* Payment Links as Radio Buttons */}
+                          <div className="space-y-3">
+                            {paymentLinks.length > 0 ? (
+                              paymentLinks.map((link) => (
+                                <div
+                                  key={link.id}
+                                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                    formData.paymentLinkUsed === link.url
+                                      ? 'border-pink-400 bg-pink-50 shadow-md'
+                                      : 'border-gray-200 bg-white hover:border-pink-300 hover:bg-pink-25'
+                                  }`}
+                                  onClick={() => handlePaymentMethodSelect(link.url)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                                      formData.paymentLinkUsed === link.url
+                                        ? 'border-pink-400 bg-pink-400'
+                                        : 'border-gray-300'
+                                    }`}>
+                                      {formData.paymentLinkUsed === link.url && (
+                                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-semibold text-gray-800">{link.name}</p>
+                                      {link.description && (
+                                        <p className="text-xs text-gray-600 mt-1">{link.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-4 text-gray-500">
+                                <p>No payment methods available</p>
+                                <p className="text-sm mt-1">Please try again later</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {formData.paymentLinkUsed && (
-                          <div className="text-center bg-white p-4 rounded-lg mt-4">
+                          <div className="text-center bg-white p-4 rounded-lg mt-4 border border-green-200">
                             <div className="mb-3">
                               <p className="text-sm text-gray-600">Amount to Pay</p>
                               <p className="text-2xl font-bold text-gray-800">€{amountBreakdown.total.toFixed(2)}</p>
@@ -730,13 +760,29 @@ const DonationForm = () => {
                     </div>
                   </div>
 
+                  {/* Email Warning Note */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="text-blue-500 text-xl mt-0.5">📧</div>
+                      <div>
+                        <p className="font-semibold text-blue-800 mb-1">Email Confirmation</p>
+                        <p className="text-blue-700 text-sm">
+                          After submission, a confirmation email will be sent to <strong>{formData.email || 'your email'}</strong>. 
+                          <span className="font-semibold block mt-1">
+                            📁 Please check your spam folder if you don't see the confirmation email in your inbox!
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Continue Button */}
                   <div className="text-center pt-4">
                     <button
                       type="button"
                       onClick={() => setStep(2)}
                       disabled={!isStep1Complete}
-                      className="bg-gradient-to-r from-orange-400 to-amber-400 text-white py-4 px-8 rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg flex items-center justify-center gap-2 mx-auto"
+                      className="bg-gradient-to-r from-pink-400 to-orange-400 text-white py-4 px-8 rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg flex items-center justify-center gap-2 mx-auto"
                     >
                       Review & Continue
                       <ArrowRight className="w-5 h-5" />
@@ -764,7 +810,7 @@ const DonationForm = () => {
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Team Information */}
-                    <div className="bg-orange-50 p-6 rounded-xl border border-orange-200">
+                    <div className="bg-pink-50 p-6 rounded-xl border border-pink-200">
                       <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
                         <span className="text-xl">👥</span>
                         Team Information
@@ -868,6 +914,22 @@ const DonationForm = () => {
                           <span className="text-xs font-semibold text-gray-500 uppercase">Screenshot</span>
                           <p className="text-gray-900 font-semibold text-sm">{screenshot?.name}</p>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Email Warning in Review Step */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="text-blue-500 text-xl mt-0.5">📧</div>
+                      <div>
+                        <p className="font-semibold text-blue-800 mb-1">Email Confirmation</p>
+                        <p className="text-blue-700 text-sm">
+                          After submission, a confirmation email will be sent to <strong>{formData.email}</strong>. 
+                          <span className="font-semibold block mt-1">
+                            📁 Please check your spam folder if you don't see the confirmation email in your inbox!
+                          </span>
+                        </p>
                       </div>
                     </div>
                   </div>
