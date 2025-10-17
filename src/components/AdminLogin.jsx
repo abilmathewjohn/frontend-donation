@@ -16,7 +16,7 @@ const AdminLogin = ({ onLogin }) => {
     setError('');
 
     // Simple authentication
-    if (credentials.username === 'superadminquiz' && credentials.password === 'Admin@quiz123') {
+    if (credentials.username === 'Super@admin' && credentials.password === 'Admin@quiz2025') {
       localStorage.setItem('adminAuthenticated', 'true');
       onLogin(true);
     } else {
