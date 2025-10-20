@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Search, Filter, Download, RefreshCw, Edit, Eye, Trash2, X, User, Mail, Phone, Calendar, Euro, Shield, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Filter, Download, RefreshCw, Edit, Eye, Trash2, X, User, Mail, Phone, Calendar, Euro, Shield, CheckCircle, XCircle, Clock, FileText } from "lucide-react";
+import { generateTeamPDF, generateTeamTextFile } from "../utils/pdfGenerator"; // Adjust path as needed
 
 const DonationManagement = ({ onUpdate }) => {
   const [donations, setDonations] = useState([]);
@@ -15,6 +16,8 @@ const DonationManagement = ({ onUpdate }) => {
   const [selectedScreenshot, setSelectedScreenshot] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [downloadingPdfId, setDownloadingPdfId] = useState(null);
+  const [downloadingTextId, setDownloadingTextId] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -36,7 +39,6 @@ const DonationManagement = ({ onUpdate }) => {
   };
 
   const showToast = (message, type = "info") => {
-    // You can replace this with your preferred toast notification system
     const toast = document.createElement("div");
     toast.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border-l-4 ${
       type === "success" ? "bg-green-50 border-green-500 text-green-700" :
@@ -192,6 +194,44 @@ const DonationManagement = ({ onUpdate }) => {
     }
   };
 
+  // Download team details as PDF
+  const downloadTeamPDF = async (donation) => {
+    if (!donation.teamId) {
+      showToast('Team ID not available for download', 'error');
+      return;
+    }
+
+    setDownloadingPdfId(donation.id);
+    try {
+      await generateTeamPDF(donation, donation.teamId);
+      showToast('PDF downloaded successfully!', 'success');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast('Failed to generate PDF', 'error');
+    } finally {
+      setDownloadingPdfId(null);
+    }
+  };
+
+  // Download team details as text file
+  const downloadTeamText = (donation) => {
+    if (!donation.teamId) {
+      showToast('Team ID not available for download', 'error');
+      return;
+    }
+
+    setDownloadingTextId(donation.id);
+    try {
+      generateTeamTextFile(donation, donation.teamId);
+      showToast('Text file downloaded successfully!', 'success');
+    } catch (error) {
+      console.error('Error generating text file:', error);
+      showToast('Failed to generate text file', 'error');
+    } finally {
+      setDownloadingTextId(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: {
@@ -278,22 +318,22 @@ const DonationManagement = ({ onUpdate }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 sm:p-6">
       {/* Toast Container */}
-     <style>{`
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-  @keyframes slideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
-  }
-  .animate-slide-in {
-    animation: slideIn 0.3s ease-out;
-  }
-  .animate-slide-out {
-    animation: slideOut 0.3s ease-in;
-  }
-`}</style>
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(100%); opacity: 0; }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+        .animate-slide-out {
+          animation: slideOut 0.3s ease-in;
+        }
+      `}</style>
       
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -530,6 +570,45 @@ const DonationManagement = ({ onUpdate }) => {
                           {updatingId === donation.id ? "Updating..." : "Status"}
                         </button>
                         
+                        {/* Download buttons - only show for confirmed teams */}
+                        {donation.status === 'confirmed' && donation.teamId && (
+                          <>
+                            <button
+                              onClick={() => downloadTeamPDF(donation)}
+                              disabled={downloadingPdfId === donation.id}
+                              className={`flex items-center gap-2 font-semibold text-sm transition-all duration-200 ${
+                                downloadingPdfId === donation.id 
+                                  ? "text-gray-400 cursor-not-allowed" 
+                                  : "text-purple-600 hover:text-purple-800 hover:scale-105"
+                              }`}
+                            >
+                              {downloadingPdfId === donation.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Download className="w-4 h-4" />
+                              )}
+                              {downloadingPdfId === donation.id ? "Generating..." : "PDF"}
+                            </button>
+
+                            <button
+                              onClick={() => downloadTeamText(donation)}
+                              disabled={downloadingTextId === donation.id}
+                              className={`flex items-center gap-2 font-semibold text-sm transition-all duration-200 ${
+                                downloadingTextId === donation.id 
+                                  ? "text-gray-400 cursor-not-allowed" 
+                                  : "text-green-600 hover:text-green-800 hover:scale-105"
+                              }`}
+                            >
+                              {downloadingTextId === donation.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FileText className="w-4 h-4" />
+                              )}
+                              {downloadingTextId === donation.id ? "Generating..." : "Text"}
+                            </button>
+                          </>
+                        )}
+                        
                         {donation.paymentScreenshot && (
                           <button
                             onClick={() => openScreenshotModal(donation.paymentScreenshot, donation)}
@@ -688,6 +767,45 @@ const DonationManagement = ({ onUpdate }) => {
                       </p>
                     </div>
                   </>
+                )}
+
+                {/* Download Section - Show only for confirmed teams with team ID */}
+                {statusUpdate.status === "confirmed" && selectedDonation?.teamId && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200">
+                    <h4 className="font-bold text-gray-800 mb-3 text-lg flex items-center gap-2">
+                      <Download className="w-5 h-5" />
+                      Download Team Details
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Download team registration details for sharing or printing
+                    </p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => downloadTeamPDF(selectedDonation)}
+                        disabled={downloadingPdfId === selectedDonation.id}
+                        className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all duration-200 font-semibold text-sm disabled:opacity-50"
+                      >
+                        {downloadingPdfId === selectedDonation.id ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
+                        Download PDF
+                      </button>
+                      <button
+                        onClick={() => downloadTeamText(selectedDonation)}
+                        disabled={downloadingTextId === selectedDonation.id}
+                        className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 font-semibold text-sm disabled:opacity-50"
+                      >
+                        {downloadingTextId === selectedDonation.id ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileText className="w-4 h-4" />
+                        )}
+                        Download Text
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 {/* Action Buttons */}

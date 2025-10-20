@@ -44,7 +44,6 @@ const AdminDashboard = ({ onLogout }) => {
 
   const tabs = [
     { id: 'donations', name: 'Donations', icon: '💰', color: 'blue' },
-    { id: 'emails', name: 'Email Logs', icon: '📧', color: 'purple' }, 
     { id: 'payment-links', name: 'Payment Links', icon: '🔗', color: 'green' },
     { id: 'settings', name: 'Settings', icon: '⚙️', color: 'purple' }
   ];
@@ -127,7 +126,6 @@ const AdminDashboard = ({ onLogout }) => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'donations' && <DonationManagement onUpdate={fetchStats} />}
-            {activeTab === 'emails' && <EmailManagement />}
             {activeTab === 'payment-links' && <PaymentLinksManagement />}
             {activeTab === 'settings' && <SettingsManagement />}
           </div>
