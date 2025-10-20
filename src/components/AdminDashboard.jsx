@@ -44,6 +44,7 @@ const AdminDashboard = ({ onLogout }) => {
 
   const tabs = [
     { id: 'donations', name: 'Donations', icon: '💰', color: 'blue' },
+    { id: 'emails', name: 'Email Logs', icon: '📧', color: 'purple' }, 
     { id: 'payment-links', name: 'Payment Links', icon: '🔗', color: 'green' },
     { id: 'settings', name: 'Settings', icon: '⚙️', color: 'purple' }
   ];
