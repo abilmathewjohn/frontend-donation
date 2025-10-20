@@ -278,22 +278,22 @@ const DonationManagement = ({ onUpdate }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 sm:p-6">
       {/* Toast Container */}
-      <style jsx>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-          from { transform: translateX(0); opacity: 1; }
-          to { transform: translateX(100%); opacity: 0; }
-        }
-        .animate-slide-in {
-          animation: slideIn 0.3s ease-out;
-        }
-        .animate-slide-out {
-          animation: slideOut 0.3s ease-in;
-        }
-      `}</style>
+     <style>{`
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  .animate-slide-out {
+    animation: slideOut 0.3s ease-in;
+  }
+`}</style>
       
       <div className="max-w-7xl mx-auto">
         {/* Header */}
