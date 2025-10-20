@@ -127,6 +127,7 @@ const AdminDashboard = ({ onLogout }) => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'donations' && <DonationManagement onUpdate={fetchStats} />}
+            {activeTab === 'emails' && <EmailManagement />}
             {activeTab === 'payment-links' && <PaymentLinksManagement />}
             {activeTab === 'settings' && <SettingsManagement />}
           </div>
